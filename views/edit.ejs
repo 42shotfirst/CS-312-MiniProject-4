@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Edit Blog Post</h1>
+
+    <form action="/blog/edit/<%= index %>" method="POST">
+        <div>
+            <label for="creator">Morgan K. Reed:</label>
+            <input type="text" id="creator" name="creator" value="<%= post.creator %>" required>
+        </div>
+        <div>
+            <label for="title">Brain Dump:</label>
+            <input type="text" id="title" name="title" value="<%= post.title %>" required>
+        </div>
+        <div>
+            <label for="content">Blog Content:</label>
+            <textarea id="content" name="content" rows="10" required><%= post.content %></textarea>
+        </div>
+        <div>
+            <input type="submit" value="Update Post">
+        </div>
+    </form>
+</body>
+</html>

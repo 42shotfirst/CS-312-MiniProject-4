@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Welcome to Blogit!</h1>
+
+    <form action="/blog" method="POST">
+        <div>
+            <label for="creator">Creator:</label>
+            <input type="text" id="creator" name="creator" required>
+        </div>
+        <div>
+            <label for="title">Blog Title:</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div>
+            <label for="content">Blog Content:</label>
+            <textarea id="content" name="content" rows="10" required></textarea>
+        </div>
+        <div>
+            <input type="submit" value="Create Post">
+        </div>
+    </form>
+
+    <% posts.forEach((post, index) => { %>
+        <div class="post">
+            <h2><%= post.title %></h2>
+            <p><%= post.content %></p>
+            <small>By <%= post.creator %> on <%= post.creationTime %></small>
+            <br>
+            <button onclick="location.href='/blog/edit/<%= index %>'">Edit</button>
+            <form action="/blog/delete/<%= index %>" method="POST" style="display: inline;">
+                <input type="submit" value="Delete">
+            </form>
+        </div>
+    <% }); %>
+</body>
+</html>
