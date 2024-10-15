@@ -1,25 +1,71 @@
+/* Basic reset */
+body, h1, form, button, input, textarea {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* Global styles */
 body {
-    font-family: Arial, sans-serif;
+    background-color: #646464; /* Dark gray background, similar to the Commodore 64 screen */
+    color: #ffffff; /* White text color */
+    font-family: 'Press Start 2P', cursive; /* Font that mimics old-school computer consoles */
+    font-size: 16px; /* Appropriately sized text for readability */
+    line-height: 1.5;
     padding: 20px;
 }
 
-form div {
-    margin-bottom: 10px;
+h1 {
+    color: #FF4D00; /* Bright orange for headings */
+}
+
+/* Form styling */
+form {
+    background-color: #000000; /* Black background for forms */
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 label {
     display: block;
+    margin-bottom: 10px;
 }
 
-input[type="text"], textarea {
-    width: 100%;
-    padding: 8px;
+input[type="text"],
+textarea {
+    width: calc(100% - 20px);
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #FF4D00;
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
-input[type="submit"] {
+input[type="submit"], button {
+    background-color: #FF4D00; /* Orange background for buttons */
+    color: #FFFFFF;
     padding: 10px 20px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
     cursor: pointer;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    border: none;  /* No border for a cleaner look */
+}
+
+input[type="submit"]:hover, button:hover {
+    background-color: #CC3C00; /* Darker orange on hover */
+}
+
+/* Post styling */
+.post {
+    background-color: #000000; /* Black background for posts */
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #FFFFFF; /* White border for separation */
+}
+
+small {
+    opacity: 0.6; /* Slightly faded text for metadata */
 }
