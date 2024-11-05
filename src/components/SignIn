@@ -1,0 +1,67 @@
+import React, { useState } from 'react';
+
+const SignIn = () => {
+    const [userId, setUserId] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+
+        try {
+            const response = await fetch('/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                // Handle successful sign-in (e.g., redirect or set user state)
+                console.log('Sign in successful:', data);
+                // You can redirect to the home page or wherever you need to go
+                window.location.href = '/';
+            } else {
+                setError(data.error || 'An error occurred during sign-in.');
+            }
+        } catch (error) {
+            console.error('Error during sign-in:', error);
+            setError('An error occurred. Please try again.');
+        }
+    };
+
+    return (
+        <div className="signin-container">
+            <h2>Sign In</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="user_id">User ID</label>
+                    <input
+                        type="text"
+                        id="user_id"
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                {error && <div className="error-message">{error}</div>}
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+    );
+};
+
+export default SignIn;

@@ -1,75 +1,127 @@
-const express = require('express');
-const { Pool } = require('pg');
-const session = require('express-session'); // Assuming you are using sessions
-require('dotenv').config(); // Use dotenv to handle environment variables
-const app = express();
-const blogRoutes = require('./routes/blog');
+import bodyParser from 'body-parser'; // Middleware for parsing JSON bodies
+import 'bootstrap/dist/css/bootstrap.min.css';
+import cors from 'cors'; // Middleware for enabling CORS
+import dotenv from 'dotenv'; // For loading environment variables
+import express from 'express'; // Express framework
+import session from 'express-session'; // Middleware for handling sessions
+import path from 'path'; // For serving static files
+import { Pool } from 'pg'; // PostgreSQL client
 
-// PostgreSQL connection setup
+dotenv.config(); // Load environment variables from .env file
+
+// Database connection setup
 const pool = new Pool({
-    user: process.env.DB_USER || 'postgres', // Use env variables or fallback
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'blogdb', // Ensure database name is lowercase "blogdb"
-    password: process.env.DB_PASSWORD || 'your_password', // Use env variable
-    port: process.env.DB_PORT || 5432,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
 });
 
-// Middleware for sessions (assuming you want to track user sessions)
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware setup
+app.use(cors()); // Allow CORS
+app.use(bodyParser.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Session middleware
 app.use(session({
     secret: 'your_secret_key', // Change this in production
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true in production with HTTPS
+    cookie: { secure: false }, // Set to true in production with HTTPS
 }));
 
-// Middleware to parse request bodies
-app.use(express.urlencoded({ extended: true }));
-
-// Set EJS as the templating engine
-app.set('view engine', 'ejs');
-app.set('views', 'views');
-
 // Serve static files from the 'public' directory
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to PostgreSQL database
-pool.connect((err) => {
+pool.connect(err => {
     if (err) {
         console.error('Error connecting to the database:', err);
         process.exit(1); // Stop the server if the connection fails
     } else {
-        console.log('Connected to blogdb');
+        console.log('Connected to PostgreSQL');
 
-        // Routes
+        // ---------------------- API Routes ----------------------
 
-        // Retrieve and display all blog posts on the homepage
+        // GET: Retrieve all blog posts
+        app.get('/api/posts', async (req, res) => {
+            try {
+                const result = await pool.query('SELECT * FROM blogs ORDER BY date_created DESC');
+                res.status(200).json(result.rows); // Send the rows as a JSON response
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+        // POST: Create a new blog post
+        app.post('/api/posts', async (req, res) => {
+            const { title, body, creator_name, creator_user_id } = req.body;
+            try {
+                const result = await pool.query(
+                    'INSERT INTO blogs (title, body, creator_name, creator_user_id, date_created) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *',
+                    [title, body, creator_name, creator_user_id]
+                );
+                res.status(201).json(result.rows[0]); // Respond with the newly created post
+            } catch (error) {
+                console.error('Error creating post:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+        // PUT: Update an existing blog post
+        app.put('/api/posts/:id', async (req, res) => {
+            const { id } = req.params; 
+            const { title, body, creator_name } = req.body; 
+            try {
+                const result = await pool.query(
+                    'UPDATE blogs SET title = $1, body = $2, creator_name = $3 WHERE blog_id = $4 RETURNING *',
+                    [title, body, creator_name, id]
+                );
+                if (result.rows.length === 0) {
+                    return res.status(404).json({ error: 'Post not found' });
+                }
+                res.status(200).json(result.rows[0]); 
+            } catch (error) {
+                console.error('Error updating post:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+        // DELETE: Delete a blog post
+        app.delete('/api/posts/:id', async (req, res) => {
+            const { id } = req.params; 
+            try {
+                const result = await pool.query('DELETE FROM blogs WHERE blog_id = $1 RETURNING *', [id]);
+                if (result.rows.length === 0) {
+                    return res.status(404).json({ error: 'Post not found' });
+                }
+                res.status(204).send(); // Respond with 204 No Content on successful deletion
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        });
+
+        // ---------------------- Template Routes ----------------------
+
+        // Render homepage with blog posts
         app.get('/', async (req, res) => {
             try {
                 const result = await pool.query('SELECT * FROM blogs ORDER BY date_created DESC');
-                const posts = result.rows;
-                res.render('index', { posts, error: null });
+                res.render('index', { posts: result.rows, error: null });
             } catch (err) {
                 console.error('Error retrieving blog posts:', err);
                 res.render('index', { posts: [], error: 'An error occurred while retrieving blog posts.' });
             }
         });
 
-        // ---------------------- Blog Post Creation Route ----------------------
-        app.post('/create-post', async (req, res) => {
-            const { title, body, creator_name, creator_user_id } = req.body;
-            try {
-                await pool.query(
-                    'INSERT INTO blogs (title, body, creator_name, creator_user_id, date_created) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)',
-                    [title, body, creator_name, creator_user_id]
-                );
-                res.redirect('/');
-            } catch (err) {
-                console.error('Error inserting blog post:', err);
-                res.render('index', { error: 'An error occurred while creating the blog post. Please try again.' });
-            }
-        });
-
         // ---------------------- Authentication Routes ----------------------
+
         app.get('/signup', (req, res) => {
             res.render('signup', { error: null });
         });
@@ -82,10 +134,7 @@ pool.connect((err) => {
                     return res.render('signup', { error: 'User ID is already taken. Please choose a different one.' });
                 }
 
-                await pool.query(
-                    'INSERT INTO users (user_id, password, name) VALUES ($1, $2, $3)',
-                    [user_id, password, name]
-                );
+                await pool.query('INSERT INTO users (user_id, password, name) VALUES ($1, $2, $3)', [user_id, password, name]);
                 res.redirect('/signin');
             } catch (err) {
                 console.error('Error inserting new user:', err);
@@ -104,7 +153,7 @@ pool.connect((err) => {
                 if (user.rows.length === 0) {
                     return res.render('signin', { error: 'Invalid User ID or Password. Please try again.' });
                 }
-                req.session.user_id = user_id; // Storing the user_id in session after successful sign-in
+                req.session.user_id = user_id; // Store user_id in session after successful sign-in
                 res.redirect('/');
             } catch (err) {
                 console.error('Error during sign-in:', err);
@@ -115,7 +164,7 @@ pool.connect((err) => {
         // ---------------------- Edit Post Route ----------------------
         app.get('/blog/edit/:id', async (req, res) => {
             const postId = req.params.id;
-            const currentUserId = req.session.user_id; // Assuming you store the user_id in session
+            const currentUserId = req.session.user_id; 
             try {
                 const result = await pool.query('SELECT * FROM blogs WHERE blog_id = $1', [postId]);
                 const post = result.rows[0];
@@ -166,8 +215,9 @@ pool.connect((err) => {
             }
         });
 
-        // Start the server on the specified port
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+        // Start the server
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+        });
     }
 });

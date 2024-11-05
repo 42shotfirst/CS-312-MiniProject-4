@@ -1,0 +1,77 @@
+import React, { useState } from 'react';
+
+const SignUp = () => {
+    const [userId, setUserId] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+
+        try {
+            const response = await fetch('/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId, password, name }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                // Handle successful sign-up (e.g., redirect to sign-in)
+                console.log('Sign up successful:', data);
+                window.location.href = '/signin'; // Redirect to sign-in page
+            } else {
+                setError(data.error || 'An error occurred during sign-up.');
+            }
+        } catch (error) {
+            console.error('Error during sign-up:', error);
+            setError('An error occurred. Please try again.');
+        }
+    };
+
+    return (
+        <div className="signup-container">
+            <h2>Sign Up</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="user_id">User ID</label>
+                    <input
+                        type="text"
+                        id="user_id"
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="name">Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                </div>
+                {error && <div className="error-message">{error}</div>}
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    );
+};
+
+export default SignUp;

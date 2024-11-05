@@ -19,7 +19,11 @@ body {
 }
 
 h1 {
-    color: #007bff;
+    color: #007bff; /* Header color */
+}
+
+h2 {
+    color: #343a40; /* Dark gray for secondary headers */
 }
 
 /* Form styling */
@@ -66,6 +70,36 @@ input[type="submit"]:hover, button:hover {
     border: 1px solid #FFFFFF; /* White border for separation */
 }
 
+.post-list {
+    border: 1px solid #ced4da; /* Border around post list */
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #ffffff; /* White background for posts */
+}
+
 small {
     opacity: 0.6; /* Slightly faded text for metadata */
+}
+
+/* Container styling */
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+/* Button spacing */
+.btn {
+    margin-right: 10px; /* Space between buttons */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    input[type="text"],
+    textarea {
+        width: calc(100% - 20px);
+    }
 }
